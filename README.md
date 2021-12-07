@@ -1,3 +1,3 @@
-# d-bus_nowplayling
+# 1Lt-NowPlayling
 
-Reads D-Bus Mediaplayer2 Data to write playing music information to file
+Reads D-Bus mediaplayer data to write playing media information to file
