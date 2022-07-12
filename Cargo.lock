@@ -3,6 +3,11 @@
 version = 3
 
 [[package]]
+name = "config_1lt"
+version = "0.1.0"
+source = "git+https://gitlab.com/1LtSoftware/1lt_config.git#41539f1a0a2ce94f1e3ddf04cb89c1c57fc59360"
+
+[[package]]
 name = "dbus"
 version = "0.9.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -30,8 +35,9 @@ dependencies = [
 
 [[package]]
 name = "nowplaying_1lt"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
+ "config_1lt",
  "dbus",
 ]
 

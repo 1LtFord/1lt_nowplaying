@@ -1,5 +1,3 @@
-[![Build](https://github.com/1LtFord/1lt_nowplaying/actions/workflows/build.yml/badge.svg)](https://github.com/1LtFord/1lt_nowplaying/actions/workflows/build.yml)
-
 # 1Lt-NowPlayling
 
 Reads D-Bus mediaplayer data to write playing media information to file
