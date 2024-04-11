@@ -1,8 +1,12 @@
 use std::{thread, time};
+use std::sync::{mpsc, Arc, Mutex};
+use std::sync::mpsc::{Sender, Receiver};
 
+use crate::web_display::WebDisplay;
 use crate::WorkingEnvironment;
 use crate::mpris_mediaplayer2;
 use crate::config::Config;
+
 
 pub struct Service {
     sleep_duration: time::Duration,
@@ -10,6 +14,13 @@ pub struct Service {
     display_artist: bool,
     display_album: bool,
     display_title: bool,
+    web_display: WebDisplay
+}
+
+pub struct NowplayingData {
+    pub current_title: String,
+    pub current_artist: String,
+    pub current_album: String
 }
 
 impl Service {
@@ -18,12 +29,14 @@ impl Service {
         let display_artist = config.display_artist;
         let display_album = config.display_album;
         let display_title = config.display_title;
+        let web_display = WebDisplay::new(config.port.clone(), config.web_files_text.clone(), config.public.clone());
         Service {
             sleep_duration,
             work_env,
             display_artist,
             display_album,
-            display_title
+            display_title,
+            web_display
         }
     }
 
@@ -33,6 +46,10 @@ impl Service {
 
     fn now_playing(mut self) {
         let mut old_metadata = mpris_mediaplayer2::PlayerMetadata::new();
+        let (tx, rx): (Sender<NowplayingData>, Receiver<NowplayingData>) = mpsc::channel();
+        let rx = Arc::new(Mutex::new(rx));
+        let rx_web = Arc::clone(&rx);
+        thread::spawn(move || self.web_display.start(rx_web));
 
         loop {
             let mediaplayers =  Service::get_names_of_mediaplayers();
@@ -50,6 +67,13 @@ impl Service {
                         Err(error) => panic!("Error while getting mediaplayer metadata: {:?}", error)
                     };
                     if old_metadata != metadata {
+                        let i = rx.lock().unwrap().try_recv();
+                        
+                        match tx.send(NowplayingData{current_artist: metadata.artist.clone(), current_title: metadata.title.clone(), current_album: metadata.album.clone()}) {
+                            Ok(()) => (),
+                            Err(error) => panic!("cannot send data to http service thread: {error}")
+                        };
+
                         println!("{}", mediaplayer);
                         
                         if self.display_artist {

@@ -1,6 +1,6 @@
 [package]
 name = "nowplaying_1lt"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["1LtFord <mail@1lt.dev>"]
 edition = "2021"
 license = "AGPL-3.0-or-later"
@@ -10,6 +10,6 @@ publish = false
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-dbus = "0.9.5"
+dbus = "0.9.7"
 
 config_1lt = { git = "https://gitlab.com/1LtSoftware/1lt_config.git" }

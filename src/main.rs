@@ -2,6 +2,7 @@ mod mpris_mediaplayer2;
 mod environment;
 mod nowplaying;
 mod config;
+mod web_display;
 
 use environment::WorkingEnvironment;
 

@@ -13,6 +13,9 @@ pub struct Config {
     pub display_album: bool,
     pub display_title: bool,
     pub sleep_duration: time::Duration,
+    pub port: String,
+    pub web_files_text: Vec<String>,
+    pub public: bool
 }
 
 
@@ -23,13 +26,23 @@ impl Config {
         let display_album = true;
         let display_title = true;
         let sleep_duration = time::Duration::from_millis(1000);
+        let port = "9500".to_string();
+        let mut web_files_text: Vec<String> = Vec::new();
+        web_files_text.push("/nowplaying.html".to_string());
+        web_files_text.push("/nowplaying.css".to_string());
+        web_files_text.push("/nowplaying.js".to_string());
+        let web_files_binary: Vec<String> = Vec::new();
+        let public = false;
 
         let default_config = Config {
             nowplaying_path,
             display_artist,
             display_album,
             display_title,
-            sleep_duration
+            sleep_duration,
+            port,
+            web_files_text,
+            public
         };
 
         Config::read_config(Config::get_config_location(), default_config)
@@ -65,39 +78,43 @@ impl Config {
                 Err(err) => panic!("Error while reading config file: {}", err)
             };
 
+            let mut config = default_config.clone();
+
             for cfgg in file.config_groups {
                 if cfgg.group_name() == "general" {
-                    let nowplaying_path = match cfgg.get_config_attribute(format!("nowplaying_path")) {
+                    config.nowplaying_path = match cfgg.get_config_attribute(format!("nowplaying_path")) {
                         Ok(att) => att.value,
-                        Err(()) => default_config.nowplaying_path.clone()
+                        Err(()) => config.nowplaying_path
                     };
-                    let display_artist = match cfgg.get_config_attribute(format!("display_artist")) {
+                    config.display_artist = match cfgg.get_config_attribute(format!("display_artist")) {
                         Ok(att) => att.value.parse::<bool>().unwrap(),
-                        Err(()) => default_config.display_artist.clone()
+                        Err(()) => config.display_artist
                     };
-                    let display_album = match cfgg.get_config_attribute(format!("display_album")) {
+                    config.display_album = match cfgg.get_config_attribute(format!("display_album")) {
                         Ok(att) => att.value.parse::<bool>().unwrap(),
-                        Err(()) => default_config.display_album.clone()
+                        Err(()) => config.display_album
                     };
-                    let display_title = match cfgg.get_config_attribute(format!("display_title")) {
+                    config.display_title = match cfgg.get_config_attribute(format!("display_title")) {
                         Ok(att) => att.value.parse::<bool>().unwrap(),
-                        Err(()) => default_config.display_title.clone()
+                        Err(()) => config.display_title
                     };
-                    let sleep_duration = match cfgg.get_config_attribute(format!("sleep_duration")) {
+                    config.sleep_duration = match cfgg.get_config_attribute(format!("sleep_duration")) {
                         Ok(att) => time::Duration::from_millis(att.value.parse::<u64>().unwrap()),
-                        Err(()) => default_config.sleep_duration.clone()
-                    };
-                    
-                    return Config {
-                        nowplaying_path,
-                        display_artist,
-                        display_album,
-                        display_title,
-                        sleep_duration
+                        Err(()) => config.sleep_duration
+                    };                    
+                }
+                else if cfgg.group_name() == "web_files" {
+                    if config.web_files_text == default_config.web_files_text {
+                        config.web_files_text = Vec::new();
+                    }
+                    for config_attribute in cfgg.config_attributes() {
+                        if config_attribute.name.contains("web_file") {
+                            config.web_files_text.push(config_attribute.value)
+                        }
                     }
                 }
             }
-            return default_config.clone()
+            return config
         }
     }
 
@@ -111,7 +128,12 @@ impl Config {
         new_config.config_groups[0].add_config_attribute(ConfigAttribute::new(format!("display_album"), format!("{}", default_config.display_album)).unwrap());
         new_config.config_groups[0].add_config_attribute(ConfigAttribute::new(format!("display_title"), format!("{}", default_config.display_title)).unwrap());
         new_config.config_groups[0].add_config_attribute(ConfigAttribute::new(format!("sleep_duration"), default_config.sleep_duration.as_millis().to_string()).unwrap());
-        
+        new_config.config_groups[0].add_config_attribute(ConfigAttribute::new("port".to_string(), default_config.port.clone()).unwrap());
+        new_config.config_groups[0].add_config_attribute(ConfigAttribute::new("public".to_string(), default_config.public.to_string()).unwrap());
+        new_config.add_config_group("web_files".to_string());
+        new_config.config_groups[1].add_config_attribute(ConfigAttribute::new("web_file0".to_string(), default_config.web_files_text[0].clone()).unwrap());
+        new_config.config_groups[1].add_config_attribute(ConfigAttribute::new("web_file1".to_string(), default_config.web_files_text[1].clone()).unwrap());
+        new_config.config_groups[1].add_config_attribute(ConfigAttribute::new("web_file2".to_string(), default_config.web_files_text[2].clone()).unwrap());
         match write_config_file(&new_config) {
             Ok(()) => println!("No config file found! Created a new one at {} \n", config_path),
             Err(err) => panic!("Could not write config file: {}", err)
