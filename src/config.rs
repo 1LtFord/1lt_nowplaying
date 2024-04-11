@@ -14,7 +14,7 @@ pub struct Config {
     pub display_title: bool,
     pub sleep_duration: time::Duration,
     pub port: String,
-    pub web_files_text: Vec<String>,
+    pub web_files: Vec<String>,
     pub public: bool
 }
 
@@ -27,11 +27,10 @@ impl Config {
         let display_title = true;
         let sleep_duration = time::Duration::from_millis(1000);
         let port = "9500".to_string();
-        let mut web_files_text: Vec<String> = Vec::new();
-        web_files_text.push("/nowplaying.html".to_string());
-        web_files_text.push("/nowplaying.css".to_string());
-        web_files_text.push("/nowplaying.js".to_string());
-        let web_files_binary: Vec<String> = Vec::new();
+        let mut web_files: Vec<String> = Vec::new();
+        web_files.push("/nowplaying.html".to_string());
+        web_files.push("/nowplaying.css".to_string());
+        web_files.push("/nowplaying.js".to_string());
         let public = false;
 
         let default_config = Config {
@@ -41,7 +40,7 @@ impl Config {
             display_title,
             sleep_duration,
             port,
-            web_files_text,
+            web_files,
             public
         };
 
@@ -104,12 +103,12 @@ impl Config {
                     };                    
                 }
                 else if cfgg.group_name() == "web_files" {
-                    if config.web_files_text == default_config.web_files_text {
-                        config.web_files_text = Vec::new();
+                    if config.web_files == default_config.web_files {
+                        config.web_files = Vec::new();
                     }
                     for config_attribute in cfgg.config_attributes() {
                         if config_attribute.name.contains("web_file") {
-                            config.web_files_text.push(config_attribute.value)
+                            config.web_files.push(config_attribute.value)
                         }
                     }
                 }
@@ -131,9 +130,9 @@ impl Config {
         new_config.config_groups[0].add_config_attribute(ConfigAttribute::new("port".to_string(), default_config.port.clone()).unwrap());
         new_config.config_groups[0].add_config_attribute(ConfigAttribute::new("public".to_string(), default_config.public.to_string()).unwrap());
         new_config.add_config_group("web_files".to_string());
-        new_config.config_groups[1].add_config_attribute(ConfigAttribute::new("web_file0".to_string(), default_config.web_files_text[0].clone()).unwrap());
-        new_config.config_groups[1].add_config_attribute(ConfigAttribute::new("web_file1".to_string(), default_config.web_files_text[1].clone()).unwrap());
-        new_config.config_groups[1].add_config_attribute(ConfigAttribute::new("web_file2".to_string(), default_config.web_files_text[2].clone()).unwrap());
+        new_config.config_groups[1].add_config_attribute(ConfigAttribute::new("web_file0".to_string(), default_config.web_files[0].clone()).unwrap());
+        new_config.config_groups[1].add_config_attribute(ConfigAttribute::new("web_file1".to_string(), default_config.web_files[1].clone()).unwrap());
+        new_config.config_groups[1].add_config_attribute(ConfigAttribute::new("web_file2".to_string(), default_config.web_files[2].clone()).unwrap());
         match write_config_file(&new_config) {
             Ok(()) => println!("No config file found! Created a new one at {} \n", config_path),
             Err(err) => panic!("Could not write config file: {}", err)

@@ -29,7 +29,7 @@ impl Service {
         let display_artist = config.display_artist;
         let display_album = config.display_album;
         let display_title = config.display_title;
-        let web_display = WebDisplay::new(config.port.clone(), config.web_files_text.clone(), config.public.clone());
+        let web_display = WebDisplay::new(config.port.clone(), config.web_files.clone(), config.public.clone());
         Service {
             sleep_duration,
             work_env,
@@ -67,7 +67,7 @@ impl Service {
                         Err(error) => panic!("Error while getting mediaplayer metadata: {:?}", error)
                     };
                     if old_metadata != metadata {
-                        let i = rx.lock().unwrap().try_recv();
+                        let _ = rx.lock().unwrap().try_recv();
                         
                         match tx.send(NowplayingData{current_artist: metadata.artist.clone(), current_title: metadata.title.clone(), current_album: metadata.album.clone()}) {
                             Ok(()) => (),
