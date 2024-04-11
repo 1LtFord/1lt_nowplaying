@@ -52,43 +52,18 @@ impl WebDisplay {
             None => return old_data//ignore request if faulty
         };
         let mut current_data = old_data;
-
-        /*let (status_line, content) = match &request[..]{
-            "GET /nowplaying HTTP/1.1" => {
-                current_data = WebDisplay::get_nowplaying_data(rx, current_data);
-                if current_data.current_album != String::new() {
-                    ("HTTP/1.1 200 OK", format!("{{\"nowplaying\": {{\"title\": \"{} [{}]\", \"artist\": \"{}\"}}}}", current_data.current_title, current_data.current_album, current_data.current_artist))
-                }
-                else {
-                    ("HTTP/1.1 200 OK", format!("{{\"nowplaying\": {{\"title\": \"{}\", \"artist\": \"{}\"}}}}", current_data.current_title, current_data.current_artist))
-                }
-            }
-            _ => {
-                let mut response = ("HTTP/1.1 403 FORBIDDEN", String::new());
-                for file in &self.files {
-                    if &request[..] == format!("GET {file} HTTP/1.1") {
-                        match WebDisplay::get_file(file.clone()) {
-                            Ok(content) => response = ("HTTP/1.1 200 OK", content),
-                            Err(()) => response = ("HTTP/1.1 404 NOT FOUND", String::new())
-                        }
-                    }
-                }
-                response
-            }
-        };*/
-
-        let mut status_line = "";
+        let mut status_line = String::new();
         let mut content: Vec<u8> = Vec::new();
 
         match &request[..] {
             "GET /nowplaying HTTP/1.1" => {
                 current_data = WebDisplay::get_nowplaying_data(rx, current_data);
                 if current_data.current_album != String::new() {
-                    status_line = "HTTP/1.1 200 OK"; 
+                    status_line = "HTTP/1.1 200 OK".to_owned(); 
                     content = format!("{{\"nowplaying\": {{\"title\": \"{} [{}]\", \"artist\": \"{}\"}}}}", current_data.current_title, current_data.current_album, current_data.current_artist).as_bytes().to_vec();
                 }
                 else {
-                    status_line = "HTTP/1.1 200 OK";
+                    status_line = "HTTP/1.1 200 OK".to_owned();
                     content = format!("{{\"nowplaying\": {{\"title\": \"{}\", \"artist\": \"{}\"}}}}", current_data.current_title, current_data.current_artist).as_bytes().to_vec();
                 }
             }
@@ -96,13 +71,17 @@ impl WebDisplay {
                 for file in &self.files {
                     if &request[..] == format!("GET {file} HTTP/1.1") {
                         match WebDisplay::get_file_binary(file.clone()) {
-                            Ok(file_content) => {status_line = "HTTP/1.1 200 OK"; content = file_content;},
-                            Err(()) => {status_line = "HTTP/1.1 404 NOT FOUND"; content = String::new().as_bytes().to_vec();}
+                            Ok(file_content) => {status_line = "HTTP/1.1 200 OK".to_owned(); content = file_content;},
+                            Err(()) => {status_line = "HTTP/1.1 404 NOT FOUND".to_owned(); content = String::new().as_bytes().to_vec();}
                         };
+
+                        if file.contains(".svg") {
+                            status_line = format!("{status_line}\r\nContent-Type: image/svg+xml");
+                        }
                     }
                 }
-                if status_line == "" {
-                    status_line = "HTTP/1.1 403 FORBIDDEN";
+                if status_line == String::new() {
+                    status_line = "HTTP/1.1 403 FORBIDDEN".to_owned();
                 }
             }
         }
